@@ -3,7 +3,7 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Gender {
     Male,
-    Female
+    Female,
 }
 
 impl fmt::Display for Gender {
