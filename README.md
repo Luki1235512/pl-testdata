@@ -27,6 +27,38 @@ reused unchanged by a CLI, a web server, or a WASM bundle and it means the
 core business rules stay
 testable in plain `cargo test`, with no browser or server required.
 
+### Design decisions (and why)
+
+- **Cargo workspace from day one**, even with a single member. Adding a
+  `web` or `cli` crate later is just `cargo new`, not a restructure — the
+  boundary between "domain logic" and "everything else" is set up before
+  there's anything to entangle it with.
+- **Newtype pattern for `Pesel`** — wraps a private `[u8; 11]`. The only way
+  to obtain a `Pesel` is `Pesel::from_parts` (validated construction) or
+  `Pesel::parse` (validated parsing). There is no path to a `Pesel` value
+  with a bad checksum or malformed digits — invalid states are
+  unrepresentable, not just checked.
+- **Two separate construction paths, on purpose.** `from_parts` builds a
+  correct PESEL from trusted components (it computes the checksum itself,
+  so it can't get it wrong). `parse` validates an untrusted string from
+  outside the program. Conflating "build correctly" with "validate
+  externally" is a common source of bugs; keeping them as distinct methods
+  makes the trust boundary explicit in the type signatures.
+- **`DateOfBirth` wraps `chrono::NaiveDate`** rather than raw `(i32, u32,
+u32)` fields passed around loosely. Calendar validity (leap years, days
+  per month) is real, non-trivial logic — better delegated to a well-tested
+  library and enforced once at construction than reimplemented or
+  re-checked at every call site.
+- **`Gender` is an enum, not a `bool` or `String`.** Eliminates an entire
+  class of bugs (`"M"` vs `"male"` vs `true` meaning who-knows-what) — the
+  compiler only accepts `Gender::Male` or `Gender::Female`, and every
+  `match` on it is exhaustive by construction.
+- **Errors are enums that implement `std::error::Error` and `Display`**,
+  never bare strings. Callers can match on _why_ something failed
+  (`PeselError::ChecksumMismatch { expected, actual }`, not just "invalid
+  PESEL"), which matters both for good error messages in a future UI and
+  for writing precise tests.
+
 ## Running
 
 ```bash
@@ -47,11 +79,6 @@ offsets), and rejection of malformed/invalid input.
 These are known, intentional gaps. Sequenced deliberately rather than
 missing by accident:
 
-- **Random generator.** `Pesel::from_parts` builds a specific PESEL from
-  given inputs; nothing yet _randomly generates_ plausible ones. This needs
-  the `rand` crate wired in with a seedable RNG, so generation is
-  reproducible in tests (same seed → same output) while still being
-  genuinely random in normal use.
 - **Additional identifiers** - NIP, REGON, IBAN. Each with their own
   checksum/format rules, following the same validated-newtype pattern as
   `Pesel`.
