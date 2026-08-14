@@ -1,3 +1,3 @@
 [workspace]
-members = ["domain"]
+members = ["domain", "web"]
 resolver = "2"
