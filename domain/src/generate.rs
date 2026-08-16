@@ -81,7 +81,7 @@ fn to_naive_date(dob: DateOfBirth) -> NaiveDate {
         .expect("DateOfBirth always wraps a valid calendar date")
 }
 
-fn default_date_range() -> (DateOfBirth, DateOfBirth) {
+pub fn default_date_range() -> (DateOfBirth, DateOfBirth) {
     let today = chrono::Local::now().date_naive();
     let min = today - chrono::Duration::days(90 * 365);
     let max = today - chrono::Duration::days(18 * 365);

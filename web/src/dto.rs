@@ -60,7 +60,7 @@ pub struct GenerateRequest {
     pub count: Option<u8>,
 }
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Clone)]
 pub struct GenerateForm {
     #[serde(default)]
     pub gender: String,
@@ -99,11 +99,38 @@ impl GenerateForm {
 
         Ok(GenerateRequest {
             gender,
-            min_date: non_empty(&self.min_date).map(str::to_string),
-            max_date: non_empty(&self.max_date).map(str::to_string),
+            min_date: parse_form_date("min_date", &self.min_date)?,
+            max_date: parse_form_date("max_date", &self.max_date)?,
             seed,
             count,
         })
+    }
+}
+
+fn parse_form_date(field: &'static str, raw: &str) -> Result<Option<String>, FormParseError> {
+    let invalid = || FormParseError {
+        field,
+        value: raw.to_string(),
+    };
+
+    match non_empty(raw) {
+        None => Ok(None),
+        Some(s) => {
+            let parts: Vec<&str> = s.split('/').collect();
+            let [d, m, y] = parts.as_slice() else {
+                return Err(invalid());
+            };
+            if d.len() != 2 || m.len() != 2 || y.len() != 4 {
+                return Err(invalid());
+            }
+            if !d.chars().all(|c| c.is_ascii_digit())
+                || !m.chars().all(|c| c.is_ascii_digit())
+                || !y.chars().all(|c| c.is_ascii_digit())
+            {
+                return Err(invalid());
+            }
+            Ok(Some(format!("{y}-{m}-{d}")))
+        }
     }
 }
 
@@ -170,5 +197,27 @@ mod tests {
         };
         let err = form.into_request().unwrap_err();
         assert_eq!(err.field, "gender");
+    }
+
+    #[test]
+    fn form_converts_ddmmyyyy_to_iso_for_the_request() {
+        let form = GenerateForm {
+            min_date: "01/06/1990".to_string(),
+            max_date: "31/12/1999".to_string(),
+            ..Default::default()
+        };
+        let request = form.into_request().unwrap();
+        assert_eq!(request.min_date.as_deref(), Some("1990-06-01"));
+        assert_eq!(request.max_date.as_deref(), Some("1999-12-31"));
+    }
+
+    #[test]
+    fn form_rejects_a_malformed_date() {
+        let form = GenerateForm {
+            min_date: "1990-06-01".to_string(),
+            ..Default::default()
+        };
+        let err = form.into_request().unwrap_err();
+        assert_eq!(err.field, "min_date");
     }
 }

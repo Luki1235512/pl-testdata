@@ -18,6 +18,20 @@ struct ErrorBody {
     error: String,
 }
 
+impl ApiError {
+    pub fn message(&self) -> String {
+        match self {
+            ApiError::Generation(err) => err.to_string(),
+            ApiError::InvalidField { field, value } => {
+                format!("'{value}' is not a valid value for '{field}'")
+            }
+            ApiError::InvalidCount { count, max } => {
+                format!("count must be between 1 and {max}, got {count}")
+            }
+        }
+    }
+}
+
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let message = match &self {

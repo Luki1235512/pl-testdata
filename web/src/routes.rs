@@ -1,8 +1,10 @@
 use axum::extract::Form;
-use axum::response::Html;
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use domain::DateOfBirth;
+use domain::generate::default_date_range;
 use domain::nip::generate_nip;
 use domain::person::{PersonConstraints, generate_person};
 use rand::RngExt;
@@ -32,15 +34,45 @@ async fn health() -> &'static str {
 async fn index() -> Html<String> {
     Html(templates::page(templates::PageContext {
         person_results: None,
+        submitted_form: None,
+        error: None,
     }))
 }
 
-async fn html_generate(Form(form): Form<GenerateForm>) -> Result<Html<String>, ApiError> {
-    let request = form.into_request()?;
-    let (dtos, resolved_seed) = generate_people(&request)?;
-    Ok(Html(templates::page(templates::PageContext {
-        person_results: Some((&dtos, resolved_seed)),
-    })))
+async fn html_generate(Form(form): Form<GenerateForm>) -> Response {
+    let request = match form.clone().into_request() {
+        Ok(request) => request,
+        Err(form_err) => {
+            let api_err: ApiError = form_err.into();
+            return (
+                StatusCode::BAD_REQUEST,
+                Html(templates::page(templates::PageContext {
+                    person_results: None,
+                    submitted_form: Some(&form),
+                    error: Some(api_err.message()),
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    match generate_people(&request) {
+        Ok((dtos, resolved_seed)) => Html(templates::page(templates::PageContext {
+            person_results: Some((&dtos, resolved_seed)),
+            submitted_form: Some(&form),
+            error: None,
+        }))
+        .into_response(),
+        Err(err) => (
+            StatusCode::BAD_REQUEST,
+            Html(templates::page(templates::PageContext {
+                person_results: None,
+                submitted_form: Some(&form),
+                error: Some(err.message()),
+            })),
+        )
+            .into_response(),
+    }
 }
 
 async fn api_generate(
@@ -63,24 +95,15 @@ fn generate_people(request: &GenerateRequest) -> Result<(Vec<PersonDto>, u64), A
         });
     }
 
+    let (default_min, default_max) = default_date_range();
     let date_range = match (&request.min_date, &request.max_date) {
         (Some(min), Some(max)) => Some((
             parse_iso_date("min_date", min)?,
             parse_iso_date("max_date", max)?,
         )),
+        (Some(min), None) => Some((parse_iso_date("min_date", min)?, default_max)),
+        (None, Some(max)) => Some((default_min, parse_iso_date("max_date", max)?)),
         (None, None) => None,
-        (Some(_), None) => {
-            return Err(ApiError::InvalidField {
-                field: "max_date",
-                value: "missing".into(),
-            });
-        }
-        (None, Some(_)) => {
-            return Err(ApiError::InvalidField {
-                field: "min_date",
-                value: "missing".into(),
-            });
-        }
     };
 
     let constraints = PersonConstraints {

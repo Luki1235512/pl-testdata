@@ -189,3 +189,106 @@ async fn every_generated_person_carries_a_valid_nip() {
         assert!(nip.chars().all(|c| c.is_ascii_digit()));
     }
 }
+
+#[tokio::test]
+async fn only_min_date_no_longer_errors_and_uses_a_default_upper_bound() {
+    let body = "gender=&min_date=01/01/2000&max_date=&seed=1&count=5";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains("<table>"));
+}
+
+#[tokio::test]
+async fn only_max_date_no_longer_errors_and_uses_a_default_lower_bound() {
+    let body = "gender=&min_date=&max_date=31/12/2005&seed=1&count=5";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn invalid_date_range_from_the_html_form_renders_an_html_error_not_json() {
+    let body = "gender=&min_date=01/01/2020&max_date=01/01/1990&seed=1&count=1";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+    assert!(content_type.starts_with("text/html"));
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains("invalid date range"));
+    assert!(html.contains(r#"class="error""#));
+}
+
+#[tokio::test]
+async fn submitted_form_values_are_redisplayed_after_generating() {
+    let body = "gender=female&min_date=01/06/1990&max_date=31/12/1999&seed=42&count=3";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+
+    assert!(html.contains(r#"value="01/06/1990""#));
+    assert!(html.contains(r#"value="31/12/1999""#));
+    assert!(html.contains(r#"value="42""#));
+    assert!(html.contains(r#"value="3""#));
+    assert!(html.contains(r#"value="female" selected"#));
+}
+
+#[tokio::test]
+async fn blank_seed_field_stays_blank_after_generating() {
+    let body = "gender=&min_date=&max_date=&seed=&count=3";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+
+    assert!(html.contains(r#"id="seed" name="seed" min="0" value=""#));
+}

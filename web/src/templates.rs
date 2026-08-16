@@ -1,10 +1,17 @@
-use crate::dto::{PersonDto, SYNTHETIC_DATA_DISCLAIMER};
+use crate::dto::{GenerateForm, PersonDto, SYNTHETIC_DATA_DISCLAIMER};
 
 pub struct PageContext<'a> {
     pub person_results: Option<(&'a [PersonDto], u64)>,
+    pub submitted_form: Option<&'a GenerateForm>,
+    pub error: Option<String>,
 }
 
 pub fn page(ctx: PageContext) -> String {
+    let error_html = match &ctx.error {
+        Some(msg) => format!(r#"<p class="error" role="alert">⚠️ {}</p>"#, escape(msg)),
+        None => String::new(),
+    };
+    let form_html = render_form(ctx.submitted_form);
     let person_results_html = match ctx.person_results {
         Some((people, seed)) => result_section(people, seed),
         None => String::new(),
@@ -25,7 +32,8 @@ pub fn page(ctx: PageContext) -> String {
   <p class="disclaimer" role="note">⚠️ {SYNTHETIC_DATA_DISCLAIMER}</p>
 </header>
 <main>
-{FORM}
+{error_html}
+{form_html}
 {person_results_html}
 </main>
 <script>
@@ -38,32 +46,56 @@ document.querySelectorAll('.copy').forEach((btn) => {{
     )
 }
 
-const FORM: &str = r#"<form method="post" action="/generate">
+fn render_form(submitted: Option<&GenerateForm>) -> String {
+    let (gender, min_date, max_date, seed, count) = match submitted {
+        Some(f) => (
+            f.gender.as_str(),
+            f.min_date.as_str(),
+            f.max_date.as_str(),
+            f.seed.as_str(),
+            f.count.as_str(),
+        ),
+        None => ("", "", "", "", ""),
+    };
+
+    let count_value = if count.is_empty() { "1" } else { count };
+
+    format!(
+        r#"<form method="post" action="/generate">
   <fieldset>
     <legend>Generation options</legend>
 
     <label for="gender">Gender</label>
     <select id="gender" name="gender">
-      <option value="">Any</option>
-      <option value="male">Male</option>
-      <option value="female">Female</option>
+      <option value="" {any_sel}>Any</option>
+      <option value="male" {male_sel}>Male</option>
+      <option value="female" {female_sel}>Female</option>
     </select>
 
     <label for="min_date">Born after</label>
-    <input type="date" id="min_date" name="min_date">
+    <input type="text" id="min_date" name="min_date" placeholder="dd/mm/yyyy" pattern="\d{{2}}/\d{{2}}/\d{{4}}" value="{min_date}">
 
     <label for="max_date">Born before</label>
-    <input type="date" id="max_date" name="max_date">
+    <input type="text" id="max_date" name="max_date" placeholder="dd/mm/yyyy" pattern="\d{{2}}/\d{{2}}/\d{{4}}" value="{max_date}">
 
     <label for="seed">Seed (optional - reuse it to reproduce the same output)</label>
-    <input type="number" id="seed" name="seed" min="0">
+    <input type="number" id="seed" name="seed" min="0" value="{seed}">
 
     <label for="count">How many</label>
-    <input type="number" id="count" name="count" min="1" max="50" value="1">
+    <input type="number" id="count" name="count" min="1" max="50" value="{count_value}">
 
     <button type="submit">Generate</button>
   </fieldset>
-</form>"#;
+</form>"#,
+        any_sel = if gender.is_empty() { "selected" } else { "" },
+        male_sel = if gender == "male" { "selected" } else { "" },
+        female_sel = if gender == "female" { "selected" } else { "" },
+        min_date = escape(min_date),
+        max_date = escape(max_date),
+        seed = escape(seed),
+        count_value = escape(count_value),
+    )
+}
 
 fn result_section(people: &[PersonDto], seed: u64) -> String {
     let rows: String = people
@@ -106,6 +138,7 @@ fn escape(s: &str) -> String {
 const CSS: &str = "\
 body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
 .disclaimer{background:#fff3cd;border:1px solid #ffe69c;padding:.5rem 1rem;border-radius:.25rem;font-weight:600}
+.error{background:#fde2e2;border:1px solid #f5b5b5;padding:.5rem 1rem;border-radius:.25rem;font-weight:600;color:#7a1f1f}
 fieldset{border:1px solid #ccc;border-radius:.5rem;padding:1rem;display:grid;gap:.5rem;max-width:320px;margin:0 auto}
 label{font-size:.85rem;font-weight:600}
 table{width:100%;border-collapse:collapse;margin-top:1rem}
