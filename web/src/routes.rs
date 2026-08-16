@@ -3,7 +3,8 @@ use axum::response::Html;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use domain::DateOfBirth;
-use domain::person::{Person, PersonConstraints, generate_person};
+use domain::nip::generate_nip;
+use domain::person::{PersonConstraints, generate_person};
 use rand::RngExt;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
@@ -29,21 +30,23 @@ async fn health() -> &'static str {
 }
 
 async fn index() -> Html<String> {
-    Html(templates::page(None))
+    Html(templates::page(templates::PageContext {
+        person_results: None,
+    }))
 }
 
 async fn html_generate(Form(form): Form<GenerateForm>) -> Result<Html<String>, ApiError> {
     let request = form.into_request()?;
-    let (people, resolved_seed) = generate_people(&request)?;
-    let dtos: Vec<PersonDto> = people.into_iter().map(PersonDto::from).collect();
-    Ok(Html(templates::page(Some((&dtos, resolved_seed)))))
+    let (dtos, resolved_seed) = generate_people(&request)?;
+    Ok(Html(templates::page(templates::PageContext {
+        person_results: Some((&dtos, resolved_seed)),
+    })))
 }
 
 async fn api_generate(
     Json(request): Json<GenerateRequest>,
 ) -> Result<Json<GenerateResponse>, ApiError> {
     let (people, resolved_seed) = generate_people(&request)?;
-    let people = people.into_iter().map(PersonDto::from).collect();
     Ok(Json(GenerateResponse {
         disclaimer: SYNTHETIC_DATA_DISCLAIMER,
         resolved_seed,
@@ -51,7 +54,7 @@ async fn api_generate(
     }))
 }
 
-fn generate_people(request: &GenerateRequest) -> Result<(Vec<Person>, u64), ApiError> {
+fn generate_people(request: &GenerateRequest) -> Result<(Vec<PersonDto>, u64), ApiError> {
     let count = request.count.unwrap_or(1);
     if count == 0 || count > MAX_COUNT {
         return Err(ApiError::InvalidCount {
@@ -91,8 +94,12 @@ fn generate_people(request: &GenerateRequest) -> Result<(Vec<Person>, u64), ApiE
     let mut rng = StdRng::seed_from_u64(resolved_seed);
 
     let people = (0..count)
-        .map(|_| generate_person(&mut rng, &constraints))
-        .collect::<Result<Vec<Person>, _>>()?;
+        .map(|_| {
+            let person = generate_person(&mut rng, &constraints)?;
+            let nip = generate_nip(&mut rng);
+            Ok(PersonDto::new(person, nip))
+        })
+        .collect::<Result<Vec<PersonDto>, ApiError>>()?;
 
     Ok((people, resolved_seed))
 }

@@ -167,4 +167,25 @@ async fn html_form_submission_renders_a_results_table() {
     let html = String::from_utf8(bytes.to_vec()).unwrap();
     assert!(html.contains("<table>"));
     assert!(html.contains("Seed used: <code>99</code>"));
+    assert!(html.contains("<th>NIP</th>"));
+}
+
+#[tokio::test]
+async fn every_generated_person_carries_a_valid_nip() {
+    let payload = json!({ "seed": 5, "count": 10 });
+
+    let response = router()
+        .oneshot(json_post("/api/v1/persons", payload))
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = body_json(response).await;
+    for person in json["people"].as_array().unwrap() {
+        let nip = person["nip"]
+            .as_str()
+            .expect("nip should always be present");
+        assert_eq!(nip.len(), 10);
+        assert!(nip.chars().all(|c| c.is_ascii_digit()));
+    }
 }

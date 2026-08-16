@@ -1,7 +1,11 @@
 use crate::dto::{PersonDto, SYNTHETIC_DATA_DISCLAIMER};
 
-pub fn page(results: Option<(&[PersonDto], u64)>) -> String {
-    let results_html = match results {
+pub struct PageContext<'a> {
+    pub person_results: Option<(&'a [PersonDto], u64)>,
+}
+
+pub fn page(ctx: PageContext) -> String {
+    let person_results_html = match ctx.person_results {
         Some((people, seed)) => result_section(people, seed),
         None => String::new(),
     };
@@ -22,8 +26,13 @@ pub fn page(results: Option<(&[PersonDto], u64)>) -> String {
 </header>
 <main>
 {FORM}
-{results_html}
+{person_results_html}
 </main>
+<script>
+document.querySelectorAll('.copy').forEach((btn) => {{
+  btn.addEventListener('click', () => navigator.clipboard.writeText(btn.dataset.copy));
+}});
+</script>
 </body>
 </html>"#
     )
@@ -64,6 +73,7 @@ fn result_section(people: &[PersonDto], seed: u64) -> String {
                 r#"<tr>
   <td>{}</td><td>{}</td><td>{}</td><td>{}</td>
   <td><code>{}</code> <button type="button" class="copy" data-copy="{}">Copy</button></td>
+  <td><code>{}</code> <button type="button" class="copy" data-copy="{}">Copy</button></td>
 </tr>"#,
                 escape(&p.first_name),
                 escape(&p.last_name),
@@ -71,6 +81,8 @@ fn result_section(people: &[PersonDto], seed: u64) -> String {
                 escape(&p.date_of_birth),
                 escape(&p.pesel),
                 escape(&p.pesel),
+                escape(&p.nip),
+                escape(&p.nip),
             )
         })
         .collect();
@@ -78,14 +90,9 @@ fn result_section(people: &[PersonDto], seed: u64) -> String {
     format!(
         r#"<p class="seed">Seed used: <code>{seed}</code> - resubmit with this seed to reproduce these rows.</p>
 <table>
-<thead><tr><th>First name</th><th>Last name</th><th>Gender</th><th>Date of birth</th><th>PESEL</th></tr></thead>
+<thead><tr><th>First name</th><th>Last name</th><th>Gender</th><th>Date of birth</th><th>PESEL</th><th>NIP</th></tr></thead>
 <tbody>{rows}</tbody>
-</table>
-<script>
-document.querySelectorAll('.copy').forEach((btn) => {{
-  btn.addEventListener('click', () => navigator.clipboard.writeText(btn.dataset.copy));
-}});
-</script>"#
+</table>"#
     )
 }
 
@@ -99,7 +106,7 @@ fn escape(s: &str) -> String {
 const CSS: &str = "\
 body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
 .disclaimer{background:#fff3cd;border:1px solid #ffe69c;padding:.5rem 1rem;border-radius:.25rem;font-weight:600}
-fieldset{border:1px solid #ccc;border-radius:.5rem;padding:1rem;display:grid;gap:.5rem;max-width:320px}
+fieldset{border:1px solid #ccc;border-radius:.5rem;padding:1rem;display:grid;gap:.5rem;max-width:320px;margin:0 auto}
 label{font-size:.85rem;font-weight:600}
 table{width:100%;border-collapse:collapse;margin-top:1rem}
 th,td{border-bottom:1px solid #ddd;padding:.5rem;text-align:left}

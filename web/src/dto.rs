@@ -1,4 +1,5 @@
 use domain::Gender;
+use domain::nip::Nip;
 use domain::person::Person;
 use serde::{Deserialize, Serialize};
 
@@ -9,16 +10,18 @@ pub struct PersonDto {
     pub gender: String,
     pub date_of_birth: String,
     pub pesel: String,
+    pub nip: String,
 }
 
-impl From<Person> for PersonDto {
-    fn from(person: Person) -> Self {
+impl PersonDto {
+    pub fn new(person: Person, nip: Nip) -> Self {
         PersonDto {
             first_name: person.first_name,
             last_name: person.last_name,
             gender: person.gender.to_string(),
             date_of_birth: person.date_of_birth.to_string(),
             pesel: person.pesel.to_string(),
+            nip: nip.to_string(),
         }
     }
 }
@@ -137,13 +140,15 @@ mod tests {
             date_of_birth: dob,
             pesel,
         };
+        let nip = domain::nip::Nip::from_digits([1, 2, 3, 4, 5, 6, 3, 2, 1]).unwrap();
 
-        let dto = PersonDto::from(person);
+        let dto = PersonDto::new(person, nip);
 
         assert_eq!(dto.first_name, "Anna");
         assert_eq!(dto.gender, "Female");
         assert_eq!(dto.date_of_birth, "1990-06-15");
         assert_eq!(dto.pesel, pesel.to_string());
+        assert_eq!(dto.nip, "1234563218");
     }
 
     #[test]

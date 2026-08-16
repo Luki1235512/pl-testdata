@@ -2,6 +2,7 @@ use chrono::{Datelike, NaiveDate};
 use std::fmt;
 
 pub mod generate;
+pub mod nip;
 pub mod person;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

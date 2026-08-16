@@ -1,8 +1,8 @@
 # pl-testdata
 
 A synthetic Polish test-data generator for
-QA engineers - PESEL numbers, and eventually other identifiers (NIP, REGON,
-IBAN) and full test-person profiles.
+QA engineers - PESEL numbers, NIP numbers, and full test-person profiles.
+Eventually other identifiers (REGON, IBAN) as well.
 
 All data produced by this project is **synthetic and intended for software
 testing only**. It is not derived from, and must never be presented as,
@@ -18,6 +18,7 @@ Cargo.toml
 src/
 lib.rs # Gender, DateOfBirth, Pesel - types, validation, tests
 generate.rs # generate_pesel - seeded, constrained random Pesel generation
+nip.rs # Nip, NipError, generate_nip - validated NIP construction/parsing/generation
 person.rs # Person, generate_person - a name paired with a coherent Pesel
 web/
 Cargo.toml
@@ -26,7 +27,7 @@ lib.rs # module declarations, so the binary and integration tests share one crat
 main.rs # binary entry point: tracing setup + axum::serve
 routes.rs # GET /health, GET /, POST /generate, POST /api/v1/persons
 dto.rs # PersonDto, GenerateRequest/GenerateForm - the domain <-> HTTP boundary
-error.rs # ApiError - maps domain::generate::GenerationError to HTTP 400s
+error.rs # ApiError - maps domain error types to HTTP 400s
 templates.rs # dependency-free HTML rendering (form + results table)
 tests/
 api.rs # integration tests against the router, including a seeded-determinism test
@@ -70,16 +71,6 @@ curl -X POST localhost:3000/api/v1/persons \
 Host/port are configurable via `HOST` and `PORT` environment variables
 (defaults: `127.0.0.1:3000`).
 
-Current coverage: `Gender`, `DateOfBirth`, `Pesel`, `generate::generate_pesel`,
-`person::generate_person` (in `domain`), and the HTTP layer end-to-end (in
-`web`) - construction, round-tripping, century-encoding edge cases
-(1800s/1900s/2000s/2100s/2200s offsets), rejection of malformed/invalid
-input, seeded-RNG determinism (both in-process and across HTTP requests),
-constraint satisfaction (date range, gender), the `Person`-to-`Pesel`
-consistency invariants, and HTTP error responses for invalid input. A
-property-based test (`proptest`) checks that generated PESELs satisfy
-arbitrary valid constraints and round-trip through `Pesel::parse`.
-
 ## Tooling
 
 - `rustfmt`, run on save via Zed + rust-analyzer.
@@ -87,9 +78,8 @@ arbitrary valid constraints and round-trip through `Pesel::parse`.
 
 ## Roadmap / not yet built
 
-- **Additional identifiers** - NIP, REGON, IBAN. Each with their own
-  checksum/format rules, following the same validated-newtype pattern as
-  `Pesel`.
+- **Additional identifiers** - REGON, IBAN, following the same
+  validated-newtype pattern established by `Pesel` and `Nip`.
 - **Address, phone, email fields on `Person`.** Each deserves its own
   small generator (postal codes and phone number formats have their own
   structure) rather than being bolted on all at once.
