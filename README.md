@@ -1,12 +1,30 @@
 # pl-testdata
 
-A synthetic Polish test-data generator for
-QA engineers - PESEL numbers, NIP numbers, and full test-person profiles.
+A synthetic Polish test-data generator - PESEL numbers, NIP numbers, and full test-person profiles.
 Eventually other identifiers (REGON, IBAN) as well.
 
-All data produced by this project is **synthetic and intended for software
-testing only**. It is not derived from, and must never be presented as,
-real individuals' data.
+## Try it
+
+A live instance is deployed at: https://pl-testdata.onrender.com
+
+Note: the free-tier instance sleeps after ~15 minutes of inactivity - the
+first request after idle time may take a few seconds to wake it up.
+
+## Deployment
+
+The app is deployed on [Render](https://render.com) as a web service, built
+directly from source via Render's native Rust runtime (`cargo run --release`).
+
+A `Dockerfile` is also included at the repo root for anyone who wants to run
+the app in a container:
+
+```bash
+docker build -t pl-testdata .
+docker run -p 3000:3000 -e PORT=3000 -e HOST=0.0.0.0 pl-testdata
+```
+
+CI (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `cargo clippy`, and
+`cargo test --workspace` on every push and pull request.
 
 ## Architecture
 
@@ -68,6 +86,14 @@ curl -X POST localhost:3000/api/v1/persons \
   -d '{"gender": "female", "min_date": "1990-01-01", "max_date": "1999-12-31", "seed": 42, "count": 3}'
 ```
 
+Or against the live instance:
+
+```bash
+curl -X POST https://pl-testdata.onrender.com/api/v1/persons \
+  -H 'content-type: application/json' \
+  -d '{"gender": "female", "min_date": "1990-01-01", "max_date": "1999-12-31", "seed": 42, "count": 3}'
+```
+
 Host/port are configurable via `HOST` and `PORT` environment variables
 (defaults: `127.0.0.1:3000`).
 
@@ -83,8 +109,5 @@ Host/port are configurable via `HOST` and `PORT` environment variables
 - **Address, phone, email fields on `Person`.** Each deserves its own
   small generator (postal codes and phone number formats have their own
   structure) rather than being bolted on all at once.
-- **CI pipeline.** No GitHub Actions workflow yet (`cargo test`, `cargo
-clippy`, `cargo fmt --check`). Worth adding now that there's a `web` crate
-  whose deploy it should also gate.
 - **Rate limiting**, if `web` is ever deployed somewhere publicly reachable
   rather than run locally.
