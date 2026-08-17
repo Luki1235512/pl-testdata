@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: pl-testdata
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0

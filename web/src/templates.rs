@@ -23,6 +23,8 @@ pub fn page(ctx: PageContext) -> String {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Synthetic Polish test-person and PESEL/NIP generator for QA engineers.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧪</text></svg>">
 <title>pl-testdata - Polish test-person generator</title>
 <style>{CSS}</style>
 </head>
@@ -35,11 +37,17 @@ pub fn page(ctx: PageContext) -> String {
 {error_html}
 {form_html}
 {person_results_html}
-</main>
 <script>
 document.querySelectorAll('.copy').forEach((btn) => {{
   btn.addEventListener('click', () => navigator.clipboard.writeText(btn.dataset.copy));
 }});
+const copyAllBtn = document.getElementById('copy-all');
+if (copyAllBtn) {{
+  copyAllBtn.addEventListener('click', () => {{
+    const json = document.getElementById('results-json').textContent;
+    navigator.clipboard.writeText(json);
+  }});
+}}
 </script>
 </body>
 </html>"#
@@ -73,10 +81,10 @@ fn render_form(submitted: Option<&GenerateForm>) -> String {
     </select>
 
     <label for="min_date">Born after</label>
-    <input type="text" id="min_date" name="min_date" placeholder="dd/mm/yyyy" pattern="\d{{2}}/\d{{2}}/\d{{4}}" value="{min_date}">
+    <input type="date" id="min_date" name="min_date" value="{min_date}">
 
     <label for="max_date">Born before</label>
-    <input type="text" id="max_date" name="max_date" placeholder="dd/mm/yyyy" pattern="\d{{2}}/\d{{2}}/\d{{4}}" value="{max_date}">
+    <input type="date" id="max_date" name="max_date" value="{max_date}">
 
     <label for="seed">Seed (optional - reuse it to reproduce the same output)</label>
     <input type="number" id="seed" name="seed" min="0" value="{seed}">
@@ -119,12 +127,22 @@ fn result_section(people: &[PersonDto], seed: u64) -> String {
         })
         .collect();
 
+    let json_payload = serde_json::to_string(people).unwrap_or_else(|_| "[]".to_string());
+    let json_escaped = json_payload
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;");
+
     format!(
         r#"<p class="seed">Seed used: <code>{seed}</code> - resubmit with this seed to reproduce these rows.</p>
+<button type="button" id="copy-all" class="copy-all">Copy all as JSON</button>
+<script type="application/json" id="results-json">{json_escaped}</script>
+<div class="table-wrap">
 <table>
 <thead><tr><th>First name</th><th>Last name</th><th>Gender</th><th>Date of birth</th><th>PESEL</th><th>NIP</th></tr></thead>
 <tbody>{rows}</tbody>
-</table>"#
+</table>
+</div>"#
     )
 }
 
@@ -141,7 +159,12 @@ body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0
 .error{background:#fde2e2;border:1px solid #f5b5b5;padding:.5rem 1rem;border-radius:.25rem;font-weight:600;color:#7a1f1f}
 fieldset{border:1px solid #ccc;border-radius:.5rem;padding:1rem;display:grid;gap:.5rem;max-width:320px;margin:0 auto}
 label{font-size:.85rem;font-weight:600}
-table{width:100%;border-collapse:collapse;margin-top:1rem}
-th,td{border-bottom:1px solid #ddd;padding:.5rem;text-align:left}
-.seed{color:#555;font-size:.9rem}
-button{cursor:pointer}";
+.table-wrap{overflow-x:auto;margin-top:1rem}
+table{width:100%;border-collapse:collapse}
+th,td{border-bottom:1px solid #ddd;padding:.5rem;text-align:left;white-space:nowrap}
+.seed{color:#555;font-size:.9rem;margin-top:1rem}
+.copy-all{margin-top:.5rem}
+button{cursor:pointer}
+@media (max-width: 480px){
+  fieldset{max-width:100%}
+}";

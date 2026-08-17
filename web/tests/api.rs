@@ -192,7 +192,7 @@ async fn every_generated_person_carries_a_valid_nip() {
 
 #[tokio::test]
 async fn only_min_date_no_longer_errors_and_uses_a_default_upper_bound() {
-    let body = "gender=&min_date=01/01/2000&max_date=&seed=1&count=5";
+    let body = "gender=&min_date=2000-01-01&max_date=&seed=1&count=5";
     let request = Request::builder()
         .method("POST")
         .uri("/generate")
@@ -210,7 +210,7 @@ async fn only_min_date_no_longer_errors_and_uses_a_default_upper_bound() {
 
 #[tokio::test]
 async fn only_max_date_no_longer_errors_and_uses_a_default_lower_bound() {
-    let body = "gender=&min_date=&max_date=31/12/2005&seed=1&count=5";
+    let body = "gender=&min_date=&max_date=2005-12-31&seed=1&count=5";
     let request = Request::builder()
         .method("POST")
         .uri("/generate")
@@ -225,7 +225,7 @@ async fn only_max_date_no_longer_errors_and_uses_a_default_lower_bound() {
 
 #[tokio::test]
 async fn invalid_date_range_from_the_html_form_renders_an_html_error_not_json() {
-    let body = "gender=&min_date=01/01/2020&max_date=01/01/1990&seed=1&count=1";
+    let body = "gender=&min_date=2020-01-01&max_date=1990-01-01&seed=1&count=1";
     let request = Request::builder()
         .method("POST")
         .uri("/generate")
@@ -253,7 +253,7 @@ async fn invalid_date_range_from_the_html_form_renders_an_html_error_not_json() 
 
 #[tokio::test]
 async fn submitted_form_values_are_redisplayed_after_generating() {
-    let body = "gender=female&min_date=01/06/1990&max_date=31/12/1999&seed=42&count=3";
+    let body = "gender=female&min_date=1990-06-01&max_date=1999-12-31&seed=42&count=3";
     let request = Request::builder()
         .method("POST")
         .uri("/generate")
@@ -267,8 +267,8 @@ async fn submitted_form_values_are_redisplayed_after_generating() {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8(bytes.to_vec()).unwrap();
 
-    assert!(html.contains(r#"value="01/06/1990""#));
-    assert!(html.contains(r#"value="31/12/1999""#));
+    assert!(html.contains(r#"value="1990-06-01""#));
+    assert!(html.contains(r#"value="1999-12-31""#));
     assert!(html.contains(r#"value="42""#));
     assert!(html.contains(r#"value="3""#));
     assert!(html.contains(r#"value="female" selected"#));
@@ -291,4 +291,22 @@ async fn blank_seed_field_stays_blank_after_generating() {
     let html = String::from_utf8(bytes.to_vec()).unwrap();
 
     assert!(html.contains(r#"id="seed" name="seed" min="0" value=""#));
+}
+
+#[tokio::test]
+async fn malformed_iso_date_from_the_html_form_returns_400_naming_the_field() {
+    let body = "gender=&min_date=1990-13-40&max_date=&seed=1&count=1";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains("min_date"));
 }
