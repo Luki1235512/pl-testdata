@@ -36,7 +36,7 @@ async fn health_returns_ok() {
 }
 
 #[tokio::test]
-async fn index_page_carries_the_synthetic_data_disclaimer() {
+async fn index_page_carries_the_synthetic_data_footer_notice() {
     let response = router()
         .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
         .await
@@ -45,7 +45,7 @@ async fn index_page_carries_the_synthetic_data_disclaimer() {
     assert_eq!(response.status(), StatusCode::OK);
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8(bytes.to_vec()).unwrap();
-    assert!(html.contains("Synthetic test data"));
+    assert!(html.contains("fictitious and not linked to real people"));
 }
 
 #[tokio::test]
@@ -309,4 +309,38 @@ async fn malformed_iso_date_from_the_html_form_returns_400_naming_the_field() {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8(bytes.to_vec()).unwrap();
     assert!(html.contains("min_date"));
+}
+
+#[tokio::test]
+async fn styles_css_is_served_with_the_right_content_type() {
+    let response = router()
+        .oneshot(
+            Request::builder()
+                .uri("/styles.css")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert!(content_type.starts_with("text/css"));
+}
+
+#[tokio::test]
+async fn index_page_links_the_external_stylesheet() {
+    let response = router()
+        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains(r#"href="/styles.css""#));
 }

@@ -1,5 +1,5 @@
 use axum::extract::Form;
-use axum::http::StatusCode;
+use axum::http::{StatusCode, header};
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -7,9 +7,8 @@ use domain::DateOfBirth;
 use domain::generate::default_date_range;
 use domain::nip::generate_nip;
 use domain::person::{PersonConstraints, generate_person};
-use rand::RngExt;
-use rand::SeedableRng;
 use rand::rngs::StdRng;
+use rand::{RngExt, SeedableRng};
 
 use crate::dto::{
     GenerateForm, GenerateRequest, GenerateResponse, PersonDto, SYNTHETIC_DATA_DISCLAIMER,
@@ -18,11 +17,13 @@ use crate::error::ApiError;
 use crate::templates;
 
 const MAX_COUNT: u8 = 50;
+const STYLES_CSS: &str = include_str!("../assets/styles.css");
 
 pub fn router() -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/", get(index))
+        .route("/styles.css", get(styles))
         .route("/generate", post(html_generate))
         .route("/api/v1/persons", post(api_generate))
 }
@@ -37,6 +38,13 @@ async fn index() -> Html<String> {
         submitted_form: None,
         error: None,
     }))
+}
+
+async fn styles() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "text/css; charset=utf-8")],
+        STYLES_CSS,
+    )
 }
 
 async fn html_generate(Form(form): Form<GenerateForm>) -> Response {

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Polish test-person and PESEL/NIP generator."
+    />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>pl-testdata - Polish test-person generator</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <h1>pl-testdata</h1>
+      </div>
+    </header>
+
+    <main class="wrap">
+      {{ERROR_HTML}}
+      <section class="card">{{FORM_HTML}}</section>
+      {{RESULTS_HTML}}
+    </main>
+
+    <footer class="wrap site-footer">
+      <p>
+        Generated values are fictitious and not linked to real people. For QA
+        and testing use only.
+      </p>
+    </footer>
+
+    <script>
+      document.querySelectorAll(".copy").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(btn.dataset.copy);
+          btn.classList.add("copied");
+          setTimeout(() => btn.classList.remove("copied"), 1000);
+        });
+      });
+      const copyAllBtn = document.getElementById("copy-all");
+      if (copyAllBtn) {
+        copyAllBtn.addEventListener("click", () => {
+          const json = document.getElementById("results-json").textContent;
+          navigator.clipboard.writeText(json);
+          copyAllBtn.classList.add("copied");
+          setTimeout(() => copyAllBtn.classList.remove("copied"), 1000);
+        });
+      }
+    </script>
+  </body>
+</html>
