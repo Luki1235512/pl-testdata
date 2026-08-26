@@ -91,17 +91,14 @@ const INVARIANT_SURNAMES: &[&str] = &[
     "Nowak",
     "Kowalczyk",
     "Wójcik",
-    "Kamiński",
-    "Lewandowski",
     "Zając",
-    "Szymański",
     "Woźniak",
     "Kaczmarek",
-    "Piotrowski",
 ];
 
 const SURNAME_STEMS: &[&str] = &[
-    "Kowal", "Wiśniew", "Zieliń", "Wilcz", "Krawcz", "Wieczor", "Głowa", "Baran", "Sikor", "Ostrow",
+    "Kowal", "Wiśniew", "Zieliń", "Wilcz", "Krawcz", "Wieczor", "Głowa", "Baran", "Sikor",
+    "Ostrow", "Kamiń", "Lewandow", "Szymań", "Piotrow",
 ];
 
 fn pick_first_name(rng: &mut impl RngExt, gender: Gender) -> &'static str {
@@ -273,5 +270,23 @@ mod tests {
             generate_person(&mut rng, &constraints).unwrap_err(),
             GenerationError::InvalidDateRange { min, max }
         );
+    }
+
+    #[test]
+    fn ski_surnames_are_never_assigned_unchanged_to_a_female_person() {
+        let constraints = PersonConstraints {
+            gender: Some(Gender::Female),
+            date_range: None,
+        };
+        let mut rng = StdRng::seed_from_u64(31);
+
+        for _ in 0..500 {
+            let person = generate_person(&mut rng, &constraints).unwrap();
+            assert!(
+                !person.last_name.ends_with("ski"),
+                "female person got a masculine -ski surname: {}",
+                person.last_name
+            );
+        }
     }
 }
