@@ -7,6 +7,8 @@ Eventually other identifiers (REGON, IBAN) as well.
 
 A live instance is deployed at: https://pl-testdata.onrender.com
 
+<img width="1175" height="754" alt="Screenshot from 2026-08-27 22-21-14" src="https://github.com/user-attachments/assets/da1cddc8-985d-4b95-9e28-8601223f9cde" />
+
 Note: the free-tier instance sleeps after ~15 minutes of inactivity - the
 first request after idle time may take a few seconds to wake it up.
 
