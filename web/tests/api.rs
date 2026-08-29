@@ -168,6 +168,7 @@ async fn html_form_submission_renders_a_results_table() {
     assert!(html.contains("<table>"));
     assert!(html.contains("Seed used: <code>99</code>"));
     assert!(html.contains("<th>NIP</th>"));
+    assert!(html.contains("<th>Postal code</th>"));
 }
 
 #[tokio::test]
@@ -187,6 +188,37 @@ async fn every_generated_person_carries_a_valid_nip() {
             .expect("nip should always be present");
         assert_eq!(nip.len(), 10);
         assert!(nip.chars().all(|c| c.is_ascii_digit()));
+    }
+}
+
+#[tokio::test]
+async fn every_generated_person_carries_a_city_and_postal_code() {
+    let payload = json!({ "seed": 5, "count": 10 });
+
+    let response = router()
+        .oneshot(json_post("/api/v1/persons", payload))
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = body_json(response).await;
+    for person in json["people"].as_array().unwrap() {
+        let city = person["city"]
+            .as_str()
+            .expect("city should always be present");
+        assert!(!city.is_empty());
+
+        let postal_code = person["postal_code"]
+            .as_str()
+            .expect("postal_code should always be present");
+        assert_eq!(postal_code.len(), 6);
+        assert_eq!(postal_code.chars().nth(2), Some('-'));
+        assert!(
+            postal_code
+                .chars()
+                .enumerate()
+                .all(|(i, c)| i == 2 || c.is_ascii_digit())
+        );
     }
 }
 

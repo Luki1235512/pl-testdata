@@ -1,6 +1,6 @@
-use domain::Gender;
 use domain::nip::Nip;
 use domain::person::Person;
+use domain::{Gender, address::Address};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -11,10 +11,12 @@ pub struct PersonDto {
     pub date_of_birth: String,
     pub pesel: String,
     pub nip: String,
+    pub city: String,
+    pub postal_code: String,
 }
 
 impl PersonDto {
-    pub fn new(person: Person, nip: Nip) -> Self {
+    pub fn new(person: Person, nip: Nip, address: Address) -> Self {
         PersonDto {
             first_name: person.first_name,
             last_name: person.last_name,
@@ -22,6 +24,8 @@ impl PersonDto {
             date_of_birth: person.date_of_birth.to_string(),
             pesel: person.pesel.to_string(),
             nip: nip.to_string(),
+            city: address.city,
+            postal_code: address.postal_code.to_string(),
         }
     }
 }
@@ -168,14 +172,20 @@ mod tests {
             pesel,
         };
         let nip = domain::nip::Nip::from_digits([1, 2, 3, 4, 5, 6, 3, 2, 1]).unwrap();
+        let address = Address {
+            city: "Kraków".to_string(),
+            postal_code: domain::address::PostalCode::from_digits([3, 0, 0, 0, 1]),
+        };
 
-        let dto = PersonDto::new(person, nip);
+        let dto = PersonDto::new(person, nip, address);
 
         assert_eq!(dto.first_name, "Anna");
         assert_eq!(dto.gender, "Female");
         assert_eq!(dto.date_of_birth, "1990-06-15");
         assert_eq!(dto.pesel, pesel.to_string());
         assert_eq!(dto.nip, "1234563218");
+        assert_eq!(dto.city, "Kraków");
+        assert_eq!(dto.postal_code, "30-001");
     }
 
     #[test]

@@ -1,6 +1,7 @@
 use chrono::{Datelike, NaiveDate};
 use std::fmt;
 
+pub mod address;
 pub mod generate;
 pub mod nip;
 pub mod person;

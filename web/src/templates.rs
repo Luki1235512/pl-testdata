@@ -91,6 +91,8 @@ fn render_row(p: &PersonDto) -> String {
         .replace("{{DATE_OF_BIRTH}}", &escape(&p.date_of_birth))
         .replace("{{PESEL}}", &escape(&p.pesel))
         .replace("{{NIP}}", &escape(&p.nip))
+        .replace("{{CITY}}", &escape(&p.city))
+        .replace("{{POSTAL_CODE}}", &escape(&p.postal_code))
 }
 
 fn escape(s: &str) -> String {

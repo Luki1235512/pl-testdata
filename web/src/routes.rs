@@ -4,6 +4,7 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use domain::DateOfBirth;
+use domain::address::generate_address;
 use domain::generate::default_date_range;
 use domain::nip::generate_nip;
 use domain::person::{PersonConstraints, generate_person};
@@ -128,7 +129,8 @@ fn generate_people(request: &GenerateRequest) -> Result<(Vec<PersonDto>, u64), A
         .map(|_| {
             let person = generate_person(&mut rng, &constraints)?;
             let nip = generate_nip(&mut rng);
-            Ok(PersonDto::new(person, nip))
+            let address = generate_address(&mut rng);
+            Ok(PersonDto::new(person, nip, address))
         })
         .collect::<Result<Vec<PersonDto>, ApiError>>()?;
 
