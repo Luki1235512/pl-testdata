@@ -2,9 +2,12 @@ use chrono::{Datelike, NaiveDate};
 use std::fmt;
 
 pub mod address;
+pub mod email;
 pub mod generate;
 pub mod nip;
 pub mod person;
+pub mod phone;
+pub mod profile;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Gender {

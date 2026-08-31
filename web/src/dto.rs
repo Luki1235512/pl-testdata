@@ -1,6 +1,5 @@
-use domain::nip::Nip;
-use domain::person::Person;
-use domain::{Gender, address::Address};
+use domain::Gender;
+use domain::profile::TestProfile;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, PartialEq)]
@@ -13,10 +12,19 @@ pub struct PersonDto {
     pub nip: String,
     pub city: String,
     pub postal_code: String,
+    pub phone: String,
+    pub email: String,
 }
 
 impl PersonDto {
-    pub fn new(person: Person, nip: Nip, address: Address) -> Self {
+    pub fn new(profile: TestProfile) -> Self {
+        let TestProfile {
+            person,
+            nip,
+            address,
+            phone,
+            email,
+        } = profile;
         PersonDto {
             first_name: person.first_name,
             last_name: person.last_name,
@@ -26,6 +34,8 @@ impl PersonDto {
             nip: nip.to_string(),
             city: address.city,
             postal_code: address.postal_code.to_string(),
+            phone: phone.to_string(),
+            email: email.to_string(),
         }
     }
 }
@@ -158,6 +168,10 @@ fn non_empty(s: &str) -> Option<&str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use domain::address::Address;
+    use domain::email::{EmailAddress, ReservedDomain};
+    use domain::person::Person;
+    use domain::phone::PhoneNumber;
     use domain::{DateOfBirth, Pesel};
 
     #[test]
@@ -176,8 +190,17 @@ mod tests {
             city: "Kraków".to_string(),
             postal_code: domain::address::PostalCode::from_digits([3, 0, 0, 0, 1]),
         };
+        let phone = PhoneNumber::from_digits([5, 0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
+        let email = EmailAddress::new("anna.nowak", ReservedDomain::ExampleCom);
 
-        let dto = PersonDto::new(person, nip, address);
+        let profile = TestProfile {
+            person,
+            nip,
+            address,
+            phone,
+            email,
+        };
+        let dto = PersonDto::new(profile);
 
         assert_eq!(dto.first_name, "Anna");
         assert_eq!(dto.gender, "Female");
@@ -186,6 +209,8 @@ mod tests {
         assert_eq!(dto.nip, "1234563218");
         assert_eq!(dto.city, "Kraków");
         assert_eq!(dto.postal_code, "30-001");
+        assert_eq!(dto.phone, "+48 501 234 567");
+        assert_eq!(dto.email, "anna.nowak@example.com");
     }
 
     #[test]

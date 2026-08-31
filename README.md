@@ -1,7 +1,6 @@
 # pl-testdata
 
-A synthetic Polish test-data generator - PESEL numbers, NIP numbers, and full test-person profiles.
-Eventually other identifiers (REGON, IBAN) as well.
+Polish test-data generator - PESEL numbers, NIP numbers, and full test-person profiles.
 
 ## Try it
 
@@ -32,32 +31,35 @@ CI (`.github/workflows/ci.yml`) runs `cargo fmt --check`, `cargo clippy`, and
 
 ```
 pl-testdata/
-├── Cargo.toml              # workspace manifest, lists member crates
+├── Cargo.toml               # workspace manifest, lists member crates
 ├── domain/
 │   ├── Cargo.toml
 │   └── src/
-│       ├── lib.rs          # Gender, DateOfBirth, Pesel - types, validation, tests
-│       ├── generate.rs     # generate_pesel - seeded, constrained random Pesel generation
-│       ├── nip.rs          # Nip, NipError, generate_nip - validated NIP construction/parsing/generation
-│       ├── address.rs      # Address, PostalCode, PostalCodeError, generate_address
-│       └── person.rs       # Person, generate_person - a name paired with a coherent Pesel
+│       ├── lib.rs           # Gender, DateOfBirth, Pesel - types, validation, tests
+│       ├── generate.rs      # generate_pesel - seeded, constrained random Pesel generation
+│       ├── nip.rs           # Nip, NipError, generate_nip - validated NIP construction/parsing/generation
+│       ├── address.rs       # Address, PostalCode, PostalCodeError, generate_address
+│       ├── person.rs        # Person, generate_person - a name paired with a coherent Pesel
+│       ├── phone.rs         # PhoneNumber, PhoneNumberError, generate_phone_number
+│       ├── email.rs         # EmailAddress, ReservedDomain, generate_email
+│       └── profile.rs       # TestProfile, generate_test_profile - assembles one full profile per seeded RNG
 └── web/
     ├── Cargo.toml
     ├── assets/
-    │   ├── page.html       # overall HTML shell: header, error slot, form, results, footer
-    │   ├── form.html       # the generation-options form (gender, count, date range, seed)
-    │   ├── results.html    # results table shell: seed banner, copy-all button, JSON payload
-    │   ├── result_row.html # a single <tr> template, one per generated person
-    │   └── styles.css      # served as-is via GET /styles.css, no build step
+    │   ├── page.html        # overall HTML shell: header, error slot, form, results, footer
+    │   ├── form.html        # the generation-options form (gender, count, date range, seed)
+    │   ├── results.html     # results table shell: seed banner, copy-all button, JSON payload
+    │   ├── result_card.html # a single field-grid card template, one per generated person
+    │   └── styles.css       # served as-is via GET /styles.css, no build step
     ├── src/
-    │   ├── lib.rs          # module declarations, so the binary and integration tests share one crate
-    │   ├── main.rs         # binary entry point: tracing setup + axum::serve
-    │   ├── routes.rs       # GET /health, GET /, POST /generate, POST /api/v1/persons
-    │   ├── dto.rs          # PersonDto, GenerateRequest/GenerateForm - the domain <-> HTTP boundary
-    │   ├── error.rs        # ApiError - maps domain error types to HTTP 400s
-    │   └── templates.rs    # dependency-free HTML rendering (form + results table)
+    │   ├── lib.rs           # module declarations, so the binary and integration tests share one crate
+    │   ├── main.rs          # binary entry point: tracing setup + axum::serve
+    │   ├── routes.rs        # GET /health, GET /, POST /generate, POST /api/v1/persons
+    │   ├── dto.rs           # PersonDto, GenerateRequest/GenerateForm - the domain <-> HTTP boundary
+    │   ├── error.rs         # ApiError - maps domain error types to HTTP 400s
+    │   └── templates.rs     # dependency-free HTML rendering (form + results table)
     └── tests/
-        └── api.rs          # integration tests against the router, including a seeded-determinism test
+        └── api.rs           # integration tests against the router, including a seeded-determinism test
 ```
 
 **`domain/`** holds every domain type and rule, with zero web/UI/framework
@@ -115,8 +117,5 @@ Host/port are configurable via `HOST` and `PORT` environment variables
 
 - **Additional identifiers** - REGON, IBAN, following the same
   validated-newtype pattern established by `Pesel` and `Nip`.
-- **Phone number and email fields.** Each deserves its own small
-  generator rather than being bolted on all at once. `Address` was
-  deliberately shipped as a standalone change for the same reason.
 - **Rate limiting**, if `web` is ever deployed somewhere publicly reachable
   rather than run locally.

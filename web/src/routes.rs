@@ -4,10 +4,9 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use domain::DateOfBirth;
-use domain::address::generate_address;
 use domain::generate::default_date_range;
-use domain::nip::generate_nip;
-use domain::person::{PersonConstraints, generate_person};
+use domain::person::PersonConstraints;
+use domain::profile::generate_test_profile;
 use rand::rngs::StdRng;
 use rand::{RngExt, SeedableRng};
 
@@ -127,10 +126,8 @@ fn generate_people(request: &GenerateRequest) -> Result<(Vec<PersonDto>, u64), A
 
     let people = (0..count)
         .map(|_| {
-            let person = generate_person(&mut rng, &constraints)?;
-            let nip = generate_nip(&mut rng);
-            let address = generate_address(&mut rng);
-            Ok(PersonDto::new(person, nip, address))
+            let profile = generate_test_profile(&mut rng, &constraints)?;
+            Ok(PersonDto::new(profile))
         })
         .collect::<Result<Vec<PersonDto>, ApiError>>()?;
 

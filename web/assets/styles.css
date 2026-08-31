@@ -64,15 +64,6 @@ body {
   padding: 2rem 0 1.5rem;
 }
 
-.site-header h1 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.6rem;
-  margin: 0 0 0.75rem;
-  letter-spacing: -0.02em;
-}
-
 .error {
   background: var(--error-bg);
   border: 1px solid var(--error-border);
@@ -165,14 +156,6 @@ button[type="submit"]:hover {
   background: var(--accent-hover);
 }
 
-.copy {
-  background: var(--code-bg);
-  color: var(--text);
-  font-size: 0.78rem;
-  padding: 0.3rem 0.6rem;
-  border: 1px solid var(--border);
-}
-
 .copy-all {
   background: var(--code-bg);
   color: var(--text);
@@ -183,12 +166,10 @@ button[type="submit"]:hover {
   display: inline-block;
 }
 
-.copy:hover,
 .copy-all:hover {
   border-color: var(--accent);
 }
 
-.copy.copied,
 .copy-all.copied {
   background: var(--accent);
   color: var(--accent-contrast);
@@ -200,37 +181,56 @@ button[type="submit"]:hover {
   margin: 0 0 0.75rem;
 }
 
-.table-wrap {
-  overflow-x: auto;
+.person-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.person-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
   background: var(--surface);
+  padding: 0.9rem 1.1rem;
 }
 
-th,
-td {
-  padding: 0.65rem 0.75rem;
-  text-align: left;
-  white-space: nowrap;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.92rem;
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.9rem 1.5rem;
+  margin: 0;
 }
 
-thead th {
-  font-size: 0.75rem;
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.field-item--wide {
+  grid-column: span 2;
+}
+
+.field-item dt {
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  background: var(--code-bg);
+  white-space: nowrap;
 }
 
-tbody tr:last-child td {
-  border-bottom: none;
+.field-item dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 code {
@@ -238,6 +238,7 @@ code {
   padding: 0.15rem 0.4rem;
   border-radius: 6px;
   font-size: 0.85em;
+  cursor: text;
 }
 
 .badge {
@@ -279,7 +280,16 @@ code {
   form fieldset {
     grid-template-columns: 1fr;
   }
+
   .site-header h1 {
     font-size: 1.35rem;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-item--wide {
+    grid-column: span 1;
   }
 }

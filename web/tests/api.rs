@@ -151,7 +151,7 @@ async fn count_of_zero_is_rejected() {
 }
 
 #[tokio::test]
-async fn html_form_submission_renders_a_results_table() {
+async fn html_form_submission_renders_a_results_list() {
     let body = "gender=&min_date=&max_date=&seed=99&count=3";
     let request = Request::builder()
         .method("POST")
@@ -165,10 +165,11 @@ async fn html_form_submission_renders_a_results_table() {
     assert_eq!(response.status(), StatusCode::OK);
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8(bytes.to_vec()).unwrap();
-    assert!(html.contains("<table>"));
+    assert!(html.contains(r#"class="person-list""#));
+    assert_eq!(html.matches(r#"class="person-card""#).count(), 3);
     assert!(html.contains("Seed used: <code>99</code>"));
-    assert!(html.contains("<th>NIP</th>"));
-    assert!(html.contains("<th>Postal code</th>"));
+    assert!(html.contains("<dt>NIP</dt>"));
+    assert!(html.contains("<dt>Postal code</dt>"));
 }
 
 #[tokio::test]
@@ -237,7 +238,7 @@ async fn only_min_date_no_longer_errors_and_uses_a_default_upper_bound() {
     assert_eq!(response.status(), StatusCode::OK);
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8(bytes.to_vec()).unwrap();
-    assert!(html.contains("<table>"));
+    assert!(html.contains(r#"class="person-list""#));
 }
 
 #[tokio::test]
@@ -375,4 +376,73 @@ async fn index_page_links_the_external_stylesheet() {
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8(bytes.to_vec()).unwrap();
     assert!(html.contains(r#"href="/styles.css""#));
+}
+
+#[tokio::test]
+async fn every_generated_person_carries_a_phone_and_a_safe_email_domain() {
+    let payload = json!({ "seed": 5, "count": 10 });
+
+    let response = router()
+        .oneshot(json_post("/api/v1/persons", payload))
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = body_json(response).await;
+    let reserved_domains = ["example.com", "example.org", "example.net"];
+
+    for person in json["people"].as_array().unwrap() {
+        let phone = person["phone"]
+            .as_str()
+            .expect("phone should always be present");
+        assert!(phone.starts_with("+48 "));
+        let digits: String = phone.chars().filter(|c| c.is_ascii_digit()).collect();
+        assert_eq!(digits.len(), 11);
+
+        let email = person["email"]
+            .as_str()
+            .expect("email should always be present");
+        let domain = email.split('@').nth(1).expect("email has a domain part");
+        assert!(
+            reserved_domains.contains(&domain),
+            "{email} uses a non-reserved domain"
+        );
+    }
+}
+
+#[tokio::test]
+async fn html_form_submission_renders_phone_and_email_fields() {
+    let body = "gender=&min_date=&max_date=&seed=99&count=3";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains("<dt>Phone</dt>"));
+    assert!(html.contains("<dt>Email</dt>"));
+}
+
+#[tokio::test]
+async fn each_person_card_uses_one_unified_field_grid_not_split_rows() {
+    let body = "gender=&min_date=&max_date=&seed=99&count=1";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+
+    let response = router().oneshot(request).await.unwrap();
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+
+    assert_eq!(html.matches(r#"class="field-grid""#).count(), 1);
+    assert_eq!(html.matches(r#"class="field-item""#).count(), 10);
 }

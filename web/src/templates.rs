@@ -3,7 +3,7 @@ use crate::dto::{GenerateForm, PersonDto};
 const PAGE_TEMPLATE: &str = include_str!("../assets/page.html");
 const FORM_TEMPLATE: &str = include_str!("../assets/form.html");
 const RESULTS_TEMPLATE: &str = include_str!("../assets/results.html");
-const RESULT_ROW_TEMPLATE: &str = include_str!("../assets/result_row.html");
+const RESULT_CARD_TEMPLATE: &str = include_str!("../assets/result_card.html");
 
 pub struct PageContext<'a> {
     pub person_results: Option<(&'a [PersonDto], u64)>,
@@ -62,7 +62,7 @@ fn render_form(submitted: Option<&GenerateForm>) -> String {
 }
 
 fn result_section(people: &[PersonDto], seed: u64) -> String {
-    let rows: String = people.iter().map(render_row).collect();
+    let cards: String = people.iter().map(render_card).collect();
 
     let json_payload = serde_json::to_string(people).unwrap_or_else(|_| "[]".to_string());
     let json_escaped = json_payload
@@ -73,17 +73,17 @@ fn result_section(people: &[PersonDto], seed: u64) -> String {
     RESULTS_TEMPLATE
         .replace("{{SEED}}", &seed.to_string())
         .replace("{{JSON_PAYLOAD}}", &json_escaped)
-        .replace("{{ROWS}}", &rows)
+        .replace("{{ROWS}}", &cards)
 }
 
-fn render_row(p: &PersonDto) -> String {
+fn render_card(p: &PersonDto) -> String {
     let badge_class = if p.gender == "Male" {
         "badge-male"
     } else {
         "badge-female"
     };
 
-    RESULT_ROW_TEMPLATE
+    RESULT_CARD_TEMPLATE
         .replace("{{FIRST_NAME}}", &escape(&p.first_name))
         .replace("{{LAST_NAME}}", &escape(&p.last_name))
         .replace("{{BADGE_CLASS}}", badge_class)
@@ -93,6 +93,8 @@ fn render_row(p: &PersonDto) -> String {
         .replace("{{NIP}}", &escape(&p.nip))
         .replace("{{CITY}}", &escape(&p.city))
         .replace("{{POSTAL_CODE}}", &escape(&p.postal_code))
+        .replace("{{PHONE}}", &escape(&p.phone))
+        .replace("{{EMAIL}}", &escape(&p.email))
 }
 
 fn escape(s: &str) -> String {

@@ -7,23 +7,7 @@
   <script type="application/json" id="results-json">
     {{JSON_PAYLOAD}}
   </script>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>First name</th>
-          <th>Last name</th>
-          <th>Gender</th>
-          <th>Date of birth</th>
-          <th>PESEL</th>
-          <th>NIP</th>
-          <th>City</th>
-          <th>Postal code</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ROWS}}
-      </tbody>
-    </table>
-  </div>
+  <ul class="person-list">
+    {{ROWS}}
+  </ul>
 </section>

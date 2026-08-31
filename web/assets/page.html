@@ -13,9 +13,7 @@
   </head>
   <body>
     <header class="site-header">
-      <div class="wrap">
-        <h1>pl-testdata</h1>
-      </div>
+      <div class="wrap"></div>
     </header>
 
     <main class="wrap">
@@ -32,13 +30,6 @@
     </footer>
 
     <script>
-      document.querySelectorAll(".copy").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          navigator.clipboard.writeText(btn.dataset.copy);
-          btn.classList.add("copied");
-          setTimeout(() => btn.classList.remove("copied"), 1000);
-        });
-      });
       const copyAllBtn = document.getElementById("copy-all");
       if (copyAllBtn) {
         copyAllBtn.addEventListener("click", () => {
