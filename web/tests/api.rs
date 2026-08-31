@@ -444,5 +444,5 @@ async fn each_person_card_uses_one_unified_field_grid_not_split_rows() {
     let html = String::from_utf8(bytes.to_vec()).unwrap();
 
     assert_eq!(html.matches(r#"class="field-grid""#).count(), 1);
-    assert_eq!(html.matches(r#"class="field-item""#).count(), 10);
+    assert_eq!(html.matches("<dt>").count(), 10);
 }
