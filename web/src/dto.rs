@@ -14,6 +14,7 @@ pub struct PersonDto {
     pub postal_code: String,
     pub phone: String,
     pub email: String,
+    pub id_document: String,
 }
 
 impl PersonDto {
@@ -24,6 +25,7 @@ impl PersonDto {
             address,
             phone,
             email,
+            id_document,
         } = profile;
         PersonDto {
             first_name: person.first_name,
@@ -36,6 +38,7 @@ impl PersonDto {
             postal_code: address.postal_code.to_string(),
             phone: phone.to_string(),
             email: email.to_string(),
+            id_document: id_document.to_string(),
         }
     }
 }
@@ -192,6 +195,8 @@ mod tests {
         };
         let phone = PhoneNumber::from_digits([5, 0, 1, 2, 3, 4, 5, 6, 7]).unwrap();
         let email = EmailAddress::new("anna.nowak", ReservedDomain::ExampleCom);
+        let id_document =
+            domain::document::IdDocumentNumber::from_parts([0, 1, 2], [1, 2, 3, 4, 5]);
 
         let profile = TestProfile {
             person,
@@ -199,6 +204,7 @@ mod tests {
             address,
             phone,
             email,
+            id_document,
         };
         let dto = PersonDto::new(profile);
 
@@ -211,6 +217,7 @@ mod tests {
         assert_eq!(dto.postal_code, "30-001");
         assert_eq!(dto.phone, "+48 501 234 567");
         assert_eq!(dto.email, "anna.nowak@example.com");
+        assert_eq!(dto.id_document, "ABC412345");
     }
 
     #[test]

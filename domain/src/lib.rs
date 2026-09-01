@@ -2,6 +2,7 @@ use chrono::{Datelike, NaiveDate};
 use std::fmt;
 
 pub mod address;
+pub mod document;
 pub mod email;
 pub mod generate;
 pub mod nip;

@@ -1,4 +1,5 @@
 use crate::address::{self, Address};
+use crate::document::{self, IdDocumentNumber};
 use crate::email::{self, EmailAddress};
 use crate::generate::GenerationError;
 use crate::nip::{self, Nip};
@@ -13,6 +14,7 @@ pub struct TestProfile {
     pub address: Address,
     pub phone: PhoneNumber,
     pub email: EmailAddress,
+    pub id_document: IdDocumentNumber,
 }
 
 pub fn generate_test_profile(
@@ -24,6 +26,7 @@ pub fn generate_test_profile(
     let address = address::generate_address(rng);
     let phone = phone::generate_phone_number(rng);
     let email = email::generate_email(rng, &person.first_name, &person.last_name);
+    let id_document = document::generate_id_document_number(rng);
 
     Ok(TestProfile {
         person,
@@ -31,6 +34,7 @@ pub fn generate_test_profile(
         address,
         phone,
         email,
+        id_document,
     })
 }
 

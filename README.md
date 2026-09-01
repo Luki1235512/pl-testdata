@@ -42,6 +42,7 @@ pl-testdata/
 │       ├── person.rs        # Person, generate_person - a name paired with a coherent Pesel
 │       ├── phone.rs         # PhoneNumber, PhoneNumberError, generate_phone_number
 │       ├── email.rs         # EmailAddress, ReservedDomain, generate_email
+│       ├── document.rs      # IdDocumentNumber, IdDocumentNumberError, generate_id_document_number
 │       └── profile.rs       # TestProfile, generate_test_profile - assembles one full profile per seeded RNG
 └── web/
     ├── Cargo.toml

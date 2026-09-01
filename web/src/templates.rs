@@ -95,6 +95,7 @@ fn render_card(p: &PersonDto) -> String {
         .replace("{{POSTAL_CODE}}", &escape(&p.postal_code))
         .replace("{{PHONE}}", &escape(&p.phone))
         .replace("{{EMAIL}}", &escape(&p.email))
+        .replace("{{ID_DOCUMENT}}", &escape(&p.id_document))
 }
 
 fn escape(s: &str) -> String {
