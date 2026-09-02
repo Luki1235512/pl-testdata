@@ -96,6 +96,7 @@ fn render_card(p: &PersonDto) -> String {
         .replace("{{PHONE}}", &escape(&p.phone))
         .replace("{{EMAIL}}", &escape(&p.email))
         .replace("{{ID_DOCUMENT}}", &escape(&p.id_document))
+        .replace("{{IBAN}}", &escape(&p.iban))
 }
 
 fn escape(s: &str) -> String {

@@ -428,6 +428,7 @@ async fn html_form_submission_renders_phone_and_email_fields() {
     assert!(html.contains("<dt>Phone</dt>"));
     assert!(html.contains("<dt>Email</dt>"));
     assert!(html.contains("<dt>ID document</dt>"));
+    assert!(html.contains("<dt>IBAN</dt>"));
 }
 
 #[tokio::test]
@@ -445,7 +446,7 @@ async fn each_person_card_uses_one_unified_field_grid_not_split_rows() {
     let html = String::from_utf8(bytes.to_vec()).unwrap();
 
     assert_eq!(html.matches(r#"class="field-grid""#).count(), 1);
-    assert_eq!(html.matches("<dt>").count(), 11);
+    assert_eq!(html.matches("<dt>").count(), 12);
 }
 
 #[tokio::test]
@@ -466,5 +467,26 @@ async fn every_generated_person_carries_a_well_formed_id_document_number() {
         assert_eq!(doc.len(), 9);
         assert!(doc[0..3].chars().all(|c| c.is_ascii_uppercase()));
         assert!(doc[3..9].chars().all(|c| c.is_ascii_digit()));
+    }
+}
+
+#[tokio::test]
+async fn every_generated_person_carries_a_well_formed_iban() {
+    let payload = json!({ "seed": 5, "count": 10 });
+
+    let response = router()
+        .oneshot(json_post("/api/v1/persons", payload))
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let json = body_json(response).await;
+    for person in json["people"].as_array().unwrap() {
+        let iban = person["iban"]
+            .as_str()
+            .expect("iban should always be present");
+        assert_eq!(iban.len(), 28);
+        assert!(iban.starts_with("PL"));
+        assert!(iban[2..].chars().all(|c| c.is_ascii_digit()));
     }
 }

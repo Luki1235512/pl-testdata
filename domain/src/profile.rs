@@ -2,6 +2,7 @@ use crate::address::{self, Address};
 use crate::document::{self, IdDocumentNumber};
 use crate::email::{self, EmailAddress};
 use crate::generate::GenerationError;
+use crate::iban::{self, Iban};
 use crate::nip::{self, Nip};
 use crate::person::{self, Person, PersonConstraints};
 use crate::phone::{self, PhoneNumber};
@@ -15,6 +16,7 @@ pub struct TestProfile {
     pub phone: PhoneNumber,
     pub email: EmailAddress,
     pub id_document: IdDocumentNumber,
+    pub iban: Iban,
 }
 
 pub fn generate_test_profile(
@@ -27,6 +29,7 @@ pub fn generate_test_profile(
     let phone = phone::generate_phone_number(rng);
     let email = email::generate_email(rng, &person.first_name, &person.last_name);
     let id_document = document::generate_id_document_number(rng);
+    let iban = iban::generate_iban(rng);
 
     Ok(TestProfile {
         person,
@@ -35,6 +38,7 @@ pub fn generate_test_profile(
         phone,
         email,
         id_document,
+        iban,
     })
 }
 

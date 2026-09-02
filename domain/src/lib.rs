@@ -5,6 +5,7 @@ pub mod address;
 pub mod document;
 pub mod email;
 pub mod generate;
+pub mod iban;
 pub mod nip;
 pub mod person;
 pub mod phone;

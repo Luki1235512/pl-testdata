@@ -43,6 +43,7 @@ pl-testdata/
 │       ├── phone.rs         # PhoneNumber, PhoneNumberError, generate_phone_number
 │       ├── email.rs         # EmailAddress, ReservedDomain, generate_email
 │       ├── document.rs      # IdDocumentNumber, IdDocumentNumberError, generate_id_document_number
+│       ├── iban.rs          # Iban, IbanError, generate_iban - ISO 7064 MOD 97-10 checksum
 │       └── profile.rs       # TestProfile, generate_test_profile - assembles one full profile per seeded RNG
 └── web/
     ├── Cargo.toml
@@ -113,10 +114,3 @@ Host/port are configurable via `HOST` and `PORT` environment variables
 
 - `rustfmt`, run on save via Zed + rust-analyzer.
 - `clippy`, surfaced as inline diagnostics via rust-analyzer.
-
-## Roadmap / not yet built
-
-- **Additional identifiers** - REGON, IBAN, following the same
-  validated-newtype pattern established by `Pesel` and `Nip`.
-- **Rate limiting**, if `web` is ever deployed somewhere publicly reachable
-  rather than run locally.
