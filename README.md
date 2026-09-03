@@ -6,7 +6,7 @@ Polish test-data generator - PESEL numbers, NIP numbers, and full test-person pr
 
 A live instance is deployed at: https://pl-testdata.onrender.com
 
-<img width="1175" height="754" alt="Screenshot from 2026-08-27 22-21-14" src="https://github.com/user-attachments/assets/da1cddc8-985d-4b95-9e28-8601223f9cde" />
+<img width="1031" height="848" alt="Screenshot from 2026-09-03 22-19-33" src="https://github.com/user-attachments/assets/74d5548c-e075-4745-adb4-d4c087d7d4eb" />
 
 Note: the free-tier instance sleeps after ~15 minutes of inactivity - the
 first request after idle time may take a few seconds to wake it up.
