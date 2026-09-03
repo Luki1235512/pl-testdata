@@ -367,6 +367,59 @@ async fn styles_css_is_served_with_the_right_content_type() {
 }
 
 #[tokio::test]
+async fn robots_txt_is_served_with_the_right_content_type() {
+    let response = router()
+        .oneshot(
+            Request::builder()
+                .uri("/robots.txt")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert!(content_type.starts_with("text/plain"));
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(body.contains("Allow: /"));
+    assert!(body.contains("Sitemap:"));
+}
+
+#[tokio::test]
+async fn sitemap_xml_is_served_with_the_right_content_type() {
+    let response = router()
+        .oneshot(
+            Request::builder()
+                .uri("/sitemap.xml")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .unwrap()
+        .to_str()
+        .unwrap();
+    assert!(content_type.starts_with("application/xml"));
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let body = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(body.contains("<loc>https://pl-testdata.onrender.com/</loc>"));
+}
+
+#[tokio::test]
 async fn index_page_links_the_external_stylesheet() {
     let response = router()
         .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())

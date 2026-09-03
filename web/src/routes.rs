@@ -18,12 +18,16 @@ use crate::templates;
 
 const MAX_COUNT: u8 = 50;
 const STYLES_CSS: &str = include_str!("../assets/styles.css");
+const ROBOTS_TXT: &str = include_str!("../assets/robots.txt");
+const SITEMAP_XML: &str = include_str!("../assets/sitemap.xml");
 
 pub fn router() -> Router {
     Router::new()
         .route("/health", get(health))
         .route("/", get(index))
         .route("/styles.css", get(styles))
+        .route("/robots.txt", get(robots))
+        .route("/sitemap.xml", get(sitemap))
         .route("/generate", post(html_generate))
         .route("/api/v1/persons", post(api_generate))
 }
@@ -44,6 +48,20 @@ async fn styles() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "text/css; charset=utf-8")],
         STYLES_CSS,
+    )
+}
+
+async fn robots() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+        ROBOTS_TXT,
+    )
+}
+
+async fn sitemap() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "application/xml; charset=utf-8")],
+        SITEMAP_XML,
     )
 }
 
