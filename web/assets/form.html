@@ -1,18 +1,18 @@
-<form method="post" action="/generate">
+<form method="post" action="{{FORM_ACTION}}">
   <fieldset>
-    <legend>Generation options</legend>
-
     <div class="field">
-      <label for="gender">Gender</label>
+      <label for="gender">{{LABEL_GENDER}}</label>
       <select id="gender" name="gender">
-        <option value="" {{GENDER_ANY_SELECTED}}>Any</option>
-        <option value="male" {{GENDER_MALE_SELECTED}}>Male</option>
-        <option value="female" {{GENDER_FEMALE_SELECTED}}>Female</option>
+        <option value="" {{GENDER_ANY_SELECTED}}>{{OPTION_ANY}}</option>
+        <option value="male" {{GENDER_MALE_SELECTED}}>{{OPTION_MALE}}</option>
+        <option value="female" {{GENDER_FEMALE_SELECTED}}>
+          {{OPTION_FEMALE}}
+        </option>
       </select>
     </div>
 
     <div class="field">
-      <label for="count">How many</label>
+      <label for="count">{{LABEL_COUNT}}</label>
       <input
         type="number"
         id="count"
@@ -24,22 +24,20 @@
     </div>
 
     <div class="field">
-      <label for="min_date">Born after</label>
+      <label for="min_date">{{LABEL_MIN_DATE}}</label>
       <input type="date" id="min_date" name="min_date" value="{{MIN_DATE}}" />
     </div>
 
     <div class="field">
-      <label for="max_date">Born before</label>
+      <label for="max_date">{{LABEL_MAX_DATE}}</label>
       <input type="date" id="max_date" name="max_date" value="{{MAX_DATE}}" />
     </div>
 
     <div class="field span-2">
-      <label for="seed"
-        >Seed (optional - reuse it to reproduce the same output)</label
-      >
+      <label for="seed">{{LABEL_SEED}}</label>
       <input type="number" id="seed" name="seed" min="0" value="{{SEED}}" />
     </div>
 
-    <button type="submit">Generate</button>
+    <button type="submit">{{BUTTON_GENERATE}}</button>
   </fieldset>
 </form>

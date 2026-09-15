@@ -8,9 +8,6 @@ A live instance is deployed at: https://pl-testdata.onrender.com
 
 <img width="1031" height="848" alt="Screenshot from 2026-09-03 22-19-33" src="https://github.com/user-attachments/assets/74d5548c-e075-4745-adb4-d4c087d7d4eb" />
 
-Note: the free-tier instance sleeps after ~15 minutes of inactivity - the
-first request after idle time may take a few seconds to wake it up.
-
 ## Deployment
 
 The app is deployed on [Render](https://render.com) as a web service, built
@@ -84,12 +81,15 @@ cargo run -p web       # starts the HTTP server on http://127.0.0.1:3000
 
 Endpoints exposed by `web`:
 
-| Method | Path              | Purpose                                            |
-| ------ | ----------------- | -------------------------------------------------- |
-| GET    | `/health`         | Liveness check                                     |
-| GET    | `/`               | HTML form for generating test people               |
-| POST   | `/generate`       | HTML form submission → results table               |
-| POST   | `/api/v1/persons` | JSON API: generate one or more synthetic `Person`s |
+| Method | Path              | Purpose                                                  |
+| ------ | ----------------- | -------------------------------------------------------- |
+| GET    | `/health`         | Liveness check                                           |
+| GET    | `/`               | Redirects to `/pl/` or `/en/` based on `Accept-Language` |
+| GET    | `/pl/`            | Polish HTML form for generating test people              |
+| GET    | `/en/`            | English HTML form for generating test people             |
+| POST   | `/pl/generate`    | Polish HTML form submission -> results table             |
+| POST   | `/en/generate`    | English HTML form submission -> results table            |
+| POST   | `/api/v1/persons` | JSON API: generate one or more synthetic `Person`s       |
 
 Example JSON request:
 

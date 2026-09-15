@@ -1,6 +1,6 @@
 use axum::extract::Form;
-use axum::http::{StatusCode, header};
-use axum::response::{Html, IntoResponse, Response};
+use axum::http::{HeaderMap, StatusCode, header};
+use axum::response::{Html, IntoResponse, Redirect, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use domain::DateOfBirth;
@@ -14,6 +14,7 @@ use crate::dto::{
     GenerateForm, GenerateRequest, GenerateResponse, PersonDto, SYNTHETIC_DATA_DISCLAIMER,
 };
 use crate::error::ApiError;
+use crate::lang::Lang;
 use crate::templates;
 
 const MAX_COUNT: u8 = 50;
@@ -24,20 +25,43 @@ const SITEMAP_XML: &str = include_str!("../assets/sitemap.xml");
 pub fn router() -> Router {
     Router::new()
         .route("/health", get(health))
-        .route("/", get(index))
+        .route("/", get(root))
+        .route("/pl/", get(index_pl))
+        .route("/en/", get(index_en))
         .route("/styles.css", get(styles))
         .route("/robots.txt", get(robots))
         .route("/sitemap.xml", get(sitemap))
-        .route("/generate", post(html_generate))
+        .route("/pl/generate", post(html_generate_pl))
+        .route("/en/generate", post(html_generate_en))
         .route("/api/v1/persons", post(api_generate))
+}
+
+async fn root(headers: HeaderMap) -> Redirect {
+    let lang = Lang::detect(
+        headers
+            .get(header::ACCEPT_LANGUAGE)
+            .and_then(|v| v.to_str().ok()),
+    );
+    match lang {
+        Lang::Pl => Redirect::temporary("/pl/"),
+        Lang::En => Redirect::temporary("/en/"),
+    }
+}
+
+async fn index_pl() -> Html<String> {
+    index(Lang::Pl).await
+}
+async fn index_en() -> Html<String> {
+    index(Lang::En).await
 }
 
 async fn health() -> &'static str {
     "ok"
 }
 
-async fn index() -> Html<String> {
+async fn index(lang: Lang) -> Html<String> {
     Html(templates::page(templates::PageContext {
+        lang,
         person_results: None,
         submitted_form: None,
         error: None,
@@ -65,7 +89,14 @@ async fn sitemap() -> impl IntoResponse {
     )
 }
 
-async fn html_generate(Form(form): Form<GenerateForm>) -> Response {
+async fn html_generate_pl(form: Form<GenerateForm>) -> Response {
+    html_generate(Lang::Pl, form).await
+}
+async fn html_generate_en(form: Form<GenerateForm>) -> Response {
+    html_generate(Lang::En, form).await
+}
+
+async fn html_generate(lang: Lang, Form(form): Form<GenerateForm>) -> Response {
     let request = match form.clone().into_request() {
         Ok(request) => request,
         Err(form_err) => {
@@ -73,6 +104,7 @@ async fn html_generate(Form(form): Form<GenerateForm>) -> Response {
             return (
                 StatusCode::BAD_REQUEST,
                 Html(templates::page(templates::PageContext {
+                    lang,
                     person_results: None,
                     submitted_form: Some(&form),
                     error: Some(api_err.message()),
@@ -84,6 +116,7 @@ async fn html_generate(Form(form): Form<GenerateForm>) -> Response {
 
     match generate_people(&request) {
         Ok((dtos, resolved_seed)) => Html(templates::page(templates::PageContext {
+            lang,
             person_results: Some((&dtos, resolved_seed)),
             submitted_form: Some(&form),
             error: None,
@@ -92,6 +125,7 @@ async fn html_generate(Form(form): Form<GenerateForm>) -> Response {
         Err(err) => (
             StatusCode::BAD_REQUEST,
             Html(templates::page(templates::PageContext {
+                lang,
                 person_results: None,
                 submitted_form: Some(&form),
                 error: Some(err.message()),

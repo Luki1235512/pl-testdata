@@ -38,7 +38,7 @@ async fn health_returns_ok() {
 #[tokio::test]
 async fn index_page_carries_the_synthetic_data_footer_notice() {
     let response = router()
-        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .oneshot(Request::builder().uri("/en/").body(Body::empty()).unwrap())
         .await
         .unwrap();
 
@@ -155,7 +155,7 @@ async fn html_form_submission_renders_a_results_list() {
     let body = "gender=&min_date=&max_date=&seed=99&count=3";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -228,7 +228,7 @@ async fn only_min_date_no_longer_errors_and_uses_a_default_upper_bound() {
     let body = "gender=&min_date=2000-01-01&max_date=&seed=1&count=5";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -246,7 +246,7 @@ async fn only_max_date_no_longer_errors_and_uses_a_default_lower_bound() {
     let body = "gender=&min_date=&max_date=2005-12-31&seed=1&count=5";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -261,7 +261,7 @@ async fn invalid_date_range_from_the_html_form_renders_an_html_error_not_json() 
     let body = "gender=&min_date=2020-01-01&max_date=1990-01-01&seed=1&count=1";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -289,7 +289,7 @@ async fn submitted_form_values_are_redisplayed_after_generating() {
     let body = "gender=female&min_date=1990-06-01&max_date=1999-12-31&seed=42&count=3";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -312,7 +312,7 @@ async fn blank_seed_field_stays_blank_after_generating() {
     let body = "gender=&min_date=&max_date=&seed=&count=3";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -331,7 +331,7 @@ async fn malformed_iso_date_from_the_html_form_returns_400_naming_the_field() {
     let body = "gender=&min_date=1990-13-40&max_date=&seed=1&count=1";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -416,13 +416,13 @@ async fn sitemap_xml_is_served_with_the_right_content_type() {
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
     let body = String::from_utf8(bytes.to_vec()).unwrap();
-    assert!(body.contains("<loc>https://pl-testdata.onrender.com/</loc>"));
+    assert!(body.contains("<loc>https://pl-testdata.onrender.com/en/</loc>"));
 }
 
 #[tokio::test]
 async fn index_page_links_the_external_stylesheet() {
     let response = router()
-        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .oneshot(Request::builder().uri("/en/").body(Body::empty()).unwrap())
         .await
         .unwrap();
 
@@ -468,7 +468,7 @@ async fn html_form_submission_renders_phone_and_email_fields() {
     let body = "gender=&min_date=&max_date=&seed=99&count=3";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -489,7 +489,7 @@ async fn each_person_card_uses_one_unified_field_grid_not_split_rows() {
     let body = "gender=&min_date=&max_date=&seed=99&count=1";
     let request = Request::builder()
         .method("POST")
-        .uri("/generate")
+        .uri("/en/generate")
         .header("content-type", "application/x-www-form-urlencoded")
         .body(Body::from(body))
         .unwrap();
@@ -542,4 +542,81 @@ async fn every_generated_person_carries_a_well_formed_iban() {
         assert!(iban.starts_with("PL"));
         assert!(iban[2..].chars().all(|c| c.is_ascii_digit()));
     }
+}
+
+#[tokio::test]
+async fn root_redirects_to_polish_for_a_polish_accept_language() {
+    let request = Request::builder()
+        .uri("/")
+        .header("accept-language", "pl-PL,pl;q=0.9")
+        .body(Body::empty())
+        .unwrap();
+    let response = router().oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
+    assert_eq!(response.headers().get("location").unwrap(), "/pl/");
+}
+
+#[tokio::test]
+async fn root_redirects_to_english_without_an_accept_language_header() {
+    let response = router()
+        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
+    assert_eq!(response.headers().get("location").unwrap(), "/en/");
+}
+
+#[tokio::test]
+async fn polish_page_uses_polish_copy_and_lang_attribute() {
+    let response = router()
+        .oneshot(Request::builder().uri("/pl/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains("Generuj"));
+    assert!(html.contains(r#"lang="pl""#));
+}
+
+#[tokio::test]
+async fn each_language_page_links_to_its_counterpart() {
+    let response = router()
+        .oneshot(Request::builder().uri("/pl/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+    assert!(html.contains(r#"href="/en/""#));
+}
+
+#[tokio::test]
+async fn polish_form_posts_to_the_polish_generate_route() {
+    let body = "gender=&min_date=&max_date=&seed=1&count=1";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/pl/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+    let response = router().oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn polish_results_card_uses_polish_field_labels() {
+    let body = "gender=&min_date=&max_date=&seed=1&count=1";
+    let request = Request::builder()
+        .method("POST")
+        .uri("/pl/generate")
+        .header("content-type", "application/x-www-form-urlencoded")
+        .body(Body::from(body))
+        .unwrap();
+    let response = router().oneshot(request).await.unwrap();
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+
+    assert!(html.contains("<dt>Imię</dt>"));
+    assert!(html.contains("<dt>Data urodzenia</dt>"));
+    assert!(html.contains("Użyte ziarno:"));
+    assert!(!html.contains("<dt>First name</dt>"));
 }

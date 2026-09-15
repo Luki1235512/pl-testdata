@@ -1,9 +1,10 @@
 <section class="card">
   <p class="seed">
-    Seed used: <code>{{SEED}}</code> - resubmit with this seed to reproduce
-    these rows.
+    {{SEED_USED_PREFIX}} <code>{{SEED}}</code> {{SEED_USED_SUFFIX}}
   </p>
-  <button type="button" id="copy-all" class="copy-all">Copy all as JSON</button>
+  <button type="button" id="copy-all" class="copy-all">
+    {{COPY_ALL_LABEL}}
+  </button>
   <script type="application/json" id="results-json">
     {{JSON_PAYLOAD}}
   </script>

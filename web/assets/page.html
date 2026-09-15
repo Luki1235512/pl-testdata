@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{HTML_LANG}}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,36 +8,28 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 font-size=%2280%22><text y=%22.9em%22>🆔</text></svg>"
     />
     <meta name="theme-color" content="#4f46e5" />
-    <title>pl-testdata - Polish test-person generator</title>
-    <meta
-      name="description"
-      content="Polish test-person and PESEL/NIP generator."
-    />
-    <link rel="canonical" href="https://pl-testdata.onrender.com/" />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{TAGLINE}}" />
+    <link rel="canonical" href="{{CANONICAL_URL}}" />
+    {{HREFLANG_LINKS}}
     <meta
       name="google-site-verification"
       content="jV9oCptcx0sJnIjV_FkStKwwPBB3MSecjJephzhtL-8"
     />
-    <meta
-      property="og:title"
-      content="pl-testdata - Polish Test Data Generator"
-    />
-    <meta
-      property="og:description"
-      content="Generate synthetic PESEL, NIP, address, and person data for QA testing."
-    />
-    <meta property="og:url" content="https://pl-testdata.onrender.com/" />
+    <meta property="og:title" content="{{TITLE}}" />
+    <meta property="og:description" content="{{TAGLINE}}" />
+    <meta property="og:url" content="{{OG_URL}}" />
     <meta property="og:type" content="website" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="wrap">
-        <h1>Polish Test Data Generator</h1>
-        <p>
-          Generate synthetic PESEL numbers, NIP numbers, addresses, and full
-          test-person profiles for QA, automated testing, and form validation.
-        </p>
+        <div class="lang-switch">
+          <a href="{{LANG_SWITCH_HREF}}">{{LANG_SWITCH_LABEL}}</a>
+        </div>
+        <h1>{{TITLE}}</h1>
+        <p>{{TAGLINE}}</p>
       </div>
     </header>
 
@@ -48,10 +40,7 @@
     </main>
 
     <footer class="wrap site-footer">
-      <p>
-        Generated values are fictitious and not linked to real people. For QA
-        and testing use only.
-      </p>
+      <p>{{DISCLAIMER}}</p>
     </footer>
 
     <script>
