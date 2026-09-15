@@ -617,6 +617,6 @@ async fn polish_results_card_uses_polish_field_labels() {
 
     assert!(html.contains("<dt>Imię</dt>"));
     assert!(html.contains("<dt>Data urodzenia</dt>"));
-    assert!(html.contains("Użyte ziarno:"));
+    assert!(html.contains("Użyty seed:"));
     assert!(!html.contains("<dt>First name</dt>"));
 }
