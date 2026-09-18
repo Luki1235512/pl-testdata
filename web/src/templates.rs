@@ -5,6 +5,8 @@ const PAGE_TEMPLATE: &str = include_str!("../assets/page.html");
 const FORM_TEMPLATE: &str = include_str!("../assets/form.html");
 const RESULTS_TEMPLATE: &str = include_str!("../assets/results.html");
 const RESULT_CARD_TEMPLATE: &str = include_str!("../assets/result_card.html");
+const FAQ_TEMPLATE: &str = include_str!("../assets/faq.html");
+const FAQ_ITEM_TEMPLATE: &str = include_str!("../assets/faq_item.html");
 
 pub struct PageContext<'a> {
     pub lang: Lang,
@@ -26,6 +28,7 @@ pub fn page(ctx: PageContext) -> String {
         Some((people, seed)) => result_section(ctx.lang, people, seed),
         None => String::new(),
     };
+    let faq_html = faq_section(ctx.lang);
 
     let hreflang_links = r#"<link rel="alternate" hreflang="pl" href="https://pl-testdata.onrender.com/pl/" /><link rel="alternate" hreflang="en" href="https://pl-testdata.onrender.com/en/" />"#;
     let switch_href = format!("/{}/", other.path_segment());
@@ -48,6 +51,7 @@ pub fn page(ctx: PageContext) -> String {
         .replace("{{ERROR_HTML}}", &error_html)
         .replace("{{FORM_HTML}}", &form_html)
         .replace("{{RESULTS_HTML}}", &results_html)
+        .replace("{{FAQ_HTML}}", &faq_html)
 }
 
 fn render_form(lang: Lang, submitted: Option<&GenerateForm>) -> String {
@@ -113,6 +117,43 @@ fn result_section(lang: Lang, people: &[PersonDto], seed: u64) -> String {
         .replace("{{COPY_ALL_LABEL}}", m.copy_all_label)
         .replace("{{JSON_PAYLOAD}}", &json_escaped)
         .replace("{{ROWS}}", &cards)
+}
+
+fn faq_section(lang: Lang) -> String {
+    let m = lang.messages();
+
+    let items_html: String = m
+        .faq_items
+        .iter()
+        .map(|(question, answer)| {
+            FAQ_ITEM_TEMPLATE
+                .replace("{{QUESTION}}", &escape(question))
+                .replace("{{ANSWER}}", &escape(answer))
+        })
+        .collect();
+
+    let entities: Vec<serde_json::Value> = m
+        .faq_items
+        .iter()
+        .map(|(question, answer)| {
+            serde_json::json!({
+                "@type": "Question",
+                "name": question,
+                "acceptedAnswer": { "@type": "Answer", "text": answer }
+            })
+        })
+        .collect();
+
+    let json_ld = serde_json::json!({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": entities,
+    });
+
+    FAQ_TEMPLATE
+        .replace("{{FAQ_HEADING}}", m.faq_heading)
+        .replace("{{FAQ_ITEMS}}", &items_html)
+        .replace("{{FAQ_JSONLD}}", &json_ld.to_string().replace("</", "<\\/"))
 }
 
 fn render_card(lang: Lang, p: &PersonDto) -> String {

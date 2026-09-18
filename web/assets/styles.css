@@ -260,6 +260,28 @@ code {
   color: #be185d;
 }
 
+.faq h2 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.6rem;
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.faq-item p {
+  margin: 0.6rem 0 0.1rem;
+  color: var(--text-muted);
+}
+
 @media (prefers-color-scheme: dark) {
   .badge-male {
     background: #1e2a4a;

@@ -1,6 +1,6 @@
 use axum::extract::Form;
-use axum::http::{HeaderMap, StatusCode, header};
-use axum::response::{Html, IntoResponse, Redirect, Response};
+use axum::http::{StatusCode, header};
+use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use domain::DateOfBirth;
@@ -36,16 +36,8 @@ pub fn router() -> Router {
         .route("/api/v1/persons", post(api_generate))
 }
 
-async fn root(headers: HeaderMap) -> Redirect {
-    let lang = Lang::detect(
-        headers
-            .get(header::ACCEPT_LANGUAGE)
-            .and_then(|v| v.to_str().ok()),
-    );
-    match lang {
-        Lang::Pl => Redirect::temporary("/pl/"),
-        Lang::En => Redirect::temporary("/en/"),
-    }
+async fn root() -> Html<String> {
+    index(Lang::Pl).await
 }
 
 async fn index_pl() -> Html<String> {

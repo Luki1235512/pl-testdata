@@ -545,25 +545,21 @@ async fn every_generated_person_carries_a_well_formed_iban() {
 }
 
 #[tokio::test]
-async fn root_redirects_to_polish_for_a_polish_accept_language() {
-    let request = Request::builder()
-        .uri("/")
-        .header("accept-language", "pl-PL,pl;q=0.9")
-        .body(Body::empty())
-        .unwrap();
-    let response = router().oneshot(request).await.unwrap();
-    assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
-    assert_eq!(response.headers().get("location").unwrap(), "/pl/");
-}
-
-#[tokio::test]
-async fn root_redirects_to_english_without_an_accept_language_header() {
+async fn root_serves_polish_content_directly_with_canonical_link() {
     let response = router()
         .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
         .await
         .unwrap();
-    assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
-    assert_eq!(response.headers().get("location").unwrap(), "/en/");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+
+    assert!(html.contains(r#"lang="pl""#));
+    assert!(html.contains("Generuj"));
+    assert!(
+        html.contains(r#"<link rel="canonical" href="https://pl-testdata.onrender.com/pl/" />"#)
+    );
 }
 
 #[tokio::test]
@@ -619,4 +615,20 @@ async fn polish_results_card_uses_polish_field_labels() {
     assert!(html.contains("<dt>Data urodzenia</dt>"));
     assert!(html.contains("Użyty seed:"));
     assert!(!html.contains("<dt>First name</dt>"));
+}
+
+#[tokio::test]
+async fn index_page_includes_faq_content_and_schema() {
+    let response = router()
+        .oneshot(Request::builder().uri("/en/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let html = String::from_utf8(bytes.to_vec()).unwrap();
+
+    assert!(html.contains(r#"application/ld+json"#));
+    assert!(html.contains(r#""@type":"FAQPage""#));
+    assert!(html.contains(r#"class="faq-item""#));
+    assert!(html.contains("Is the generated PESEL number real?"));
 }
